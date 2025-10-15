@@ -1,0 +1,233 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
+
+public class StartX_APP extends JFrame {
+
+    private CardLayout cardLayout;
+    private JPanel mainPanel;
+    private Map<String, String> strategies;
+
+    private JTextField nameField, amountField, locationField;
+    private JComboBox<String> typeCombo;
+    private JTextArea outputArea;
+
+    public StartX_APP() {
+        setTitle("StartX - Business Strategy Planner");
+        setSize(700, 550);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        strategies = loadStrategies("strategies.txt"); // load from file
+
+        cardLayout = new CardLayout();
+        mainPanel = new JPanel(cardLayout);
+
+        mainPanel.add(createHomePage(), "Home");
+        mainPanel.add(createPlannerPage(), "Planner");
+        mainPanel.add(createExitPage(), "Exit");
+
+        add(mainPanel);
+        cardLayout.show(mainPanel, "Home");
+    }
+
+    // Load strategies from a text file
+    private Map<String, String> loadStrategies(String fileName) {
+        Map<String, String> map = new HashMap<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.trim().isEmpty() || !line.contains("=")) continue;
+                String[] parts = line.split("=", 2);
+                map.put(parts[0].trim().toLowerCase(), parts[1].trim().replace("\\n", "\n"));
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error loading strategies file: " + e.getMessage(),
+                    "File Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return map;
+    }
+
+    private JPanel createHomePage() {
+        JPanel homePanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                setBackground(new Color(60, 130, 190));
+                g.setColor(new Color(255, 255, 255, 60));
+                g.fillRoundRect(80, 80, 520, 350, 50, 50);
+            }
+        };
+        homePanel.setLayout(new BorderLayout());
+
+        JLabel title = new JLabel("Welcome to StartX Business Strategy Planner", JLabel.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setForeground(Color.WHITE);
+
+        JButton startButton = new JButton("Start Planning");
+        startButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        startButton.setBackground(new Color(40, 180, 99));
+        startButton.setForeground(Color.WHITE);
+        startButton.setFocusPainted(false);
+        startButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+        startButton.addActionListener(e -> cardLayout.show(mainPanel, "Planner"));
+
+        homePanel.add(title, BorderLayout.CENTER);
+        homePanel.add(startButton, BorderLayout.SOUTH);
+        homePanel.setBorder(BorderFactory.createEmptyBorder(80, 80, 80, 80));
+
+        return homePanel;
+    }
+
+    private JPanel createPlannerPage() {
+        JPanel plannerPanel = new JPanel(new BorderLayout(10, 10));
+        plannerPanel.setBackground(new Color(245, 245, 245));
+
+        JLabel heading = new JLabel("StartX Business Strategy Planner", JLabel.CENTER);
+        heading.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        heading.setForeground(new Color(52, 73, 94));
+        plannerPanel.add(heading, BorderLayout.NORTH);
+
+        JPanel inputPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        inputPanel.setBorder(BorderFactory.createTitledBorder("Enter Business Details"));
+        inputPanel.setBackground(new Color(230, 240, 250));
+
+        nameField = new JTextField();
+        amountField = new JTextField();
+        locationField = new JTextField();
+
+        String[] types = {"Tech", "Food", "Fashion", "Education", "Travel", "Fitness",
+                "Real Estate", "Healthcare", "E-commerce", "Agriculture", "Entertainment"};
+        typeCombo = new JComboBox<>(types);
+
+        inputPanel.add(new JLabel("Business Name:"));
+        inputPanel.add(nameField);
+
+        inputPanel.add(new JLabel("Business Type:"));
+        inputPanel.add(typeCombo);
+
+        inputPanel.add(new JLabel("Investment Amount (₹):"));
+        inputPanel.add(amountField);
+
+        inputPanel.add(new JLabel("Location:"));
+        inputPanel.add(locationField);
+
+        JButton generateBtn = new JButton("Generate Strategy");
+        JButton clearBtn = new JButton("Clear");
+        JButton exitBtn = new JButton("Exit");
+
+        generateBtn.setBackground(new Color(41, 128, 185));
+        generateBtn.setForeground(Color.WHITE);
+        clearBtn.setBackground(new Color(230, 126, 34));
+        clearBtn.setForeground(Color.WHITE);
+        exitBtn.setBackground(new Color(192, 57, 43));
+        exitBtn.setForeground(Color.WHITE);
+
+        inputPanel.add(generateBtn);
+        inputPanel.add(clearBtn);
+
+        outputArea = new JTextArea();
+        outputArea.setEditable(false);
+        outputArea.setBorder(BorderFactory.createTitledBorder("Generated Strategy"));
+        outputArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        JScrollPane scrollPane = new JScrollPane(outputArea);
+
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.add(exitBtn);
+
+        plannerPanel.add(inputPanel, BorderLayout.NORTH);
+        plannerPanel.add(scrollPane, BorderLayout.CENTER);
+        plannerPanel.add(bottomPanel, BorderLayout.SOUTH);
+
+        generateBtn.addActionListener(e -> generateStrategy());
+        clearBtn.addActionListener(e -> {
+            nameField.setText("");
+            amountField.setText("");
+            locationField.setText("");
+            outputArea.setText("");
+            typeCombo.setSelectedIndex(0);
+        });
+        exitBtn.addActionListener(e -> cardLayout.show(mainPanel, "Exit"));
+
+        return plannerPanel;
+    }
+
+    private JPanel createExitPage() {
+        JPanel exitPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                setBackground(new Color(46, 204, 113));
+                g.setColor(new Color(255, 255, 255, 80));
+                g.fillOval(150, 80, 400, 350);
+            }
+        };
+        exitPanel.setLayout(new BorderLayout());
+
+        JLabel thanksLabel = new JLabel("* Thank You for Using StartX Strategy Planner *", JLabel.CENTER);
+        thanksLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        thanksLabel.setForeground(Color.WHITE);
+
+        JButton homeBtn = new JButton("Back to Home");
+        JButton closeBtn = new JButton("Exit App");
+
+        homeBtn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+
+        homeBtn.setBackground(new Color(41, 128, 185));
+        homeBtn.setForeground(Color.WHITE);
+        closeBtn.setBackground(new Color(231, 76, 60));
+        closeBtn.setForeground(Color.WHITE);
+
+        homeBtn.addActionListener(e -> cardLayout.show(mainPanel, "Home"));
+        closeBtn.addActionListener(e -> System.exit(0));
+
+        JPanel btnPanel = new JPanel();
+        btnPanel.setOpaque(false);
+        btnPanel.add(homeBtn);
+        btnPanel.add(closeBtn);
+
+        exitPanel.add(thanksLabel, BorderLayout.CENTER);
+        exitPanel.add(btnPanel, BorderLayout.SOUTH);
+
+        return exitPanel;
+    }
+
+    private void generateStrategy() {
+        String name = nameField.getText().trim();
+        String type = ((String) typeCombo.getSelectedItem()).toLowerCase();
+        String amountText = amountField.getText().trim();
+        String location = locationField.getText().trim();
+
+        if (name.isEmpty() || amountText.isEmpty() || location.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        double amount;
+        try {
+            amount = Double.parseDouble(amountText);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Enter a valid number for investment.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String strategy = strategies.getOrDefault(type, "No strategy found for this type.");
+        outputArea.setText("=== Business Strategy ===\n"
+                + "Name: " + name + "\n"
+                + "Type: " + type + "\n"
+                + "Investment: " + amount + "\n"
+                + "Location: " + location + "\n"
+                + "---------------------------\n"
+                + strategy + "\n"
+                + "---------------------------");
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new StartX_APP().setVisible(true));
+    }
+}
